@@ -1,0 +1,72 @@
+{
+  "name": "dsh-web-search-order",
+  "version": "0.1.0",
+  "description": "DSH plugin: ordered web-search provider fallback (omp-style webSearchOrder) over the providers already registered in ctx.web",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "cordis",
+    "web-search",
+    "search-provider",
+    "failover"
+  ],
+  "license": "MIT",
+  "author": "killcerr",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/killcerr/dsh-web-search-order.git"
+  },
+  "bugs": {
+    "url": "https://github.com/killcerr/dsh-web-search-order/issues"
+  },
+  "homepage": "https://github.com/killcerr/dsh-web-search-order#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "scripts": {
+    "test": "node --test --test-isolation=none \"test/*.test.js\"",
+    "check": "node --check lib/index.js && node --check lib/provider.js && node --check lib/order.js && node --check lib/registry.js && node --check lib/errors.js && node --test --test-isolation=none \"test/*.test.js\""
+  },
+  "dependencies": {
+    "@deepseek-ai/schemastery": "^3.18.2"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-web": "^0.1.5-alpha.1",
+    "@deepseek-ai/cordis": "^4.0.2"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-web": "^0.1.5-alpha.1",
+    "@deepseek-ai/schemastery": "^3.18.2"
+  }
+}

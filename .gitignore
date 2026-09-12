@@ -1,0 +1,13 @@
+node_modules/
+*.log
+.DS_Store
+.dsh-test/
+# pnpm materializes a content-addressable store next to the invoking directory.
+.pnpm-store/
+# A local scratch directory for ~/.dsh profile snapshots, created on demand.
+# Such snapshots carry provider API key literals, so the whole directory stays
+# out of git and out of the published tarball.
+backup/
+# omp session exports are self-contained HTML that embed every file the reviewed
+# agent read — including any backup/ snapshot above.
+omp-session-*.html

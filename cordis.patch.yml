@@ -1,0 +1,24 @@
+# The dsh-web-search-order bundle patch.
+#
+# `dsh plugin --profile <name> add <this package>` appends this package to that
+# profile's `dsh.profile.bundles` automatically (the CLI reconciles the bundle
+# list against installed packages that declare `dsh.bundle.patch`), so this file
+# is what turns an install into a working router — no hand-written profile YAML.
+#
+# A patch replaces the targeted row's whole `config` rather than merging into it,
+# so every field this row owns is restated: `dsh-base` ships
+# `searchProvider: deepseek-official` and `fetchProvider: http`, and the seam's
+# selection never depends on registration order, so without this override the
+# router would simply never be selected.
+- id: web
+  config:
+    searchProvider: auto-fallback
+    fetchProvider: http
+
+- insert:
+    # Every field is at its schema default here; switch the order, exclude a
+    # provider, or change the per-attempt budget either in this row's `config`
+    # or — hot-reloaded, no restart — under `web-search-order:` in
+    # $DSH_HOME/settings.yaml.
+    - id: web-search-order
+      name: 'dsh-web-search-order'
