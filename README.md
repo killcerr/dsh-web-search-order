@@ -1,5 +1,7 @@
 # dsh-web-search-order
 
+[English](README.en.md)
+
 给 DSH 的 `web_search` 加一层有序降级：按你配置的顺序依次尝试多个搜索提供方，前一个不可用、报错、超时或返回空结果时自动换下一个。
 
 它不实现搜索后端，也不碰凭据，只是把部署里已经注册到 `ctx.web` 的提供方（`exa`、`deepseek-official`……）串成一条链。模型侧的 `web_search`、agent preset、`web_fetch` 都不变。相当于 omp 的 `providers.webSearchOrder`。
