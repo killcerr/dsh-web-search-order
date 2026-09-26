@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { Config, PROVIDER_ID, SETTINGS_NAMESPACE, apply, inject, name } from '../lib/index.js'
+import { Config, PROVIDER_ID, SETTINGS_NAMESPACE, apply, inject, name, supportsSettingsSection } from '../lib/index.js'
 
 /** Minimal provider stub that echoes its own id in the result. */
 function stubProvider(id) {
@@ -43,13 +43,17 @@ function createHarness(options = {}) {
     },
     inject(names, callback) {
       if (!names.includes('settings')) return
-      callback({
-        settings: {
-          installSection(owner, ns, schema, entry, hooks) {
-            sections.push({ owner, ns, schema, entry, hooks })
-          },
-        },
-      })
+      // `settingsApi: 'forms'` models DSH >= 0.1.7, where `ctx.settings` is
+      // `SettingsForms` and the namespace-registration call is gone.
+      const settings =
+        options.settingsApi === 'forms'
+          ? { describe() {}, update() {}, replace() {}, mutate() {}, configure() {} }
+          : {
+              installSection(owner, ns, schema, entry, hooks) {
+                sections.push({ owner, ns, schema, entry, hooks })
+              },
+            }
+      callback({ settings })
     },
   }
 
@@ -117,6 +121,29 @@ test('the settings source wins over the row config on the next search', async ()
   sections[0].hooks.setSource(() => Config({ order: ['a', 'b'], timeoutSeconds: 5 }))
   const second = await router.search({ query: 'q' })
   assert.equal(second.sources[0].url, 'https://a.example/')
+})
+
+test('on the 0.1.7 settings API the provider still registers and no section is installed', async () => {
+  // `ctx.settings` is `SettingsForms` there: `installSection` is a TypeError, and
+  // the row's own Config is the settings surface instead.
+  const searchProviders = new Map([['a', stubProvider('a')]])
+  const harness = createHarness({ searchProviders, settingsApi: 'forms' })
+
+  assert.doesNotThrow(() => apply(harness.ctx, Config({ order: ['a'], timeoutSeconds: 5 })))
+  assert.equal(harness.sections.length, 0, 'no namespace registration is attempted')
+  assert.equal(harness.registered.length, 1, 'the router still mounts')
+  assert.equal(harness.warnings.length, 0, 'no warning for a service shape we simply do not use')
+
+  // The row config still drives the search on that path.
+  const result = await harness.registered[0].search({ query: 'q' })
+  assert.equal(result.sources[0].url, 'https://a.example/')
+})
+
+test('supportsSettingsSection detects the removed API without throwing', () => {
+  assert.equal(supportsSettingsSection({ installSection() {} }), true)
+  assert.equal(supportsSettingsSection({ describe() {}, update() {} }), false)
+  assert.equal(supportsSettingsSection(undefined), false)
+  assert.equal(supportsSettingsSection(null), false)
 })
 
 test('excluded providers are never tried through the plugin', async () => {

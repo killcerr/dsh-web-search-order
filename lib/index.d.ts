@@ -34,7 +34,17 @@ export interface AutoFallbackConfig {
 export declare const Config: z<AutoFallbackConfig>
 
 /**
- * Register the router provider and its settings section.
+ * Whether the harness still exposes the namespace-registration settings API.
+ *
+ * DSH `0.1.7-alpha.1` replaced it with `SettingsForms`, which projects the row's
+ * own `Config` into the Settings page; calling `installSection` there throws.
+ *
+ * @param settings - the `ctx.settings` service, when the composition mounts it.
+ */
+export declare function supportsSettingsSection(settings: unknown): boolean
+
+/**
+ * Register the router provider and, on the older settings API, its settings section.
  *
  * @param ctx - the plugin context; `web` is a hard dependency.
  * @param config - the composition row config, used as the settings base layer.
