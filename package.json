@@ -47,6 +47,9 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "engines": {
+      "dsh": ">=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0"
     }
   },
   "scripts": {
@@ -57,7 +60,7 @@
     "@deepseek-ai/schemastery": "^3.18.2"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-web": "^0.1.5-alpha.1",
+    "@deepseek-ai/dsh-web": ">=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0",
     "@deepseek-ai/cordis": "^4.0.2"
   },
   "peerDependenciesMeta": {

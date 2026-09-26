@@ -28,13 +28,52 @@ dsh plugin --profile web add C:\path\to\dsh-web-search-order
 
 Updating is the same command again; pin a version by appending `#v0.1.0`.
 
-You will only ever type two names: the package `dsh-web-search-order` and the settings section `web-search-order`. The provider id (`auto-fallback`) and the patch row id are filled in by the bundled patch — you write them by hand only if you wire the plugin up manually.
+You will only ever type two names: the package `dsh-web-search-order` and the provider id `auto-fallback`. The patch row id is filled in by the bundled patch — you write it by hand only if you wire the plugin up manually. (The `0.1.5` line also has a settings section named `web-search-order`; the `0.1.6+` lines configure through the row `config` instead.)
 
 Bundles are per profile, so install once per profile. To cover every profile on the machine at once instead, use a machine-level patch (`$DSH_HOME/cordis.patch.yml`: override the `web` row, then insert the router row). Pick one or the other — the row id may appear only once.
 
+## Compatibility
+
+| DSH | Status | Where configuration comes from |
+| --- | --- | --- |
+| `0.1.5` line (alpha / rc) | supported | the `web-search-order:` section of `settings.yaml` (live) or the row `config` |
+| `0.1.6` line (alpha) | supported | the row `config` (Settings-page edits write back to the profile patch) |
+| `0.1.7` line (alpha / rc) | supported; verified on `0.1.7-rc.2` | the row `config` (Settings-page edits write back to the profile patch) |
+
+Declared range (`dsh.engines.dsh`, and the `dsh-web` peer):
+
+```
+>=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0
+```
+
+All three clauses are load-bearing. Under semver, **a version carrying a prerelease tag only
+satisfies a comparator set when some comparator in that set sits on the same
+`[major, minor, patch]` tuple**, so an 0.1.5/0.1.7-only union silently excludes the whole `0.1.6`
+line.
+
+`0.2.0` and up are not claimed.
+
+> **On the `0.1.7` line `settings.yaml` no longer applies.** That line replaced `ctx.settings` with
+> `SettingsForms`: the plugin no longer registers a `settings.yaml` section, and the host instead
+> projects this plugin's **own row `Config`** into the Settings page, writing edits back to the
+> profile's `cordis.patch.yml`. Put configuration in the **row `config`** (or use the Settings page).
+> That is the host's behaviour, not a downgrade in the plugin.
+
 ## Configuration
 
-In `~/.dsh/settings.yaml`. Changes apply live, with no restart:
+**On the `0.1.7` line**, configuration goes in the plugin row's `config` (the Settings page projects
+it into a form and writes edits back to the profile patch):
+
+```yaml
+- id: web-search-order
+  name: 'dsh-web-search-order'
+  config:
+    order: [exa, deepseek-official]
+    timeoutSeconds: 20
+```
+
+**On the `0.1.5` line**, you can additionally use the plugin's section in `~/.dsh/settings.yaml`,
+which applies live with no restart:
 
 ```yaml
 web-search-order:
@@ -51,7 +90,8 @@ web-search-order:
 | `timeoutSeconds` | `20` | Per-attempt budget; see below. |
 | `fallbackOnEmpty` | `true` | A result with neither sources nor answer text counts as a miss and hands over to the next provider. Set `false` to return the empty result as-is. |
 
-The same keys can go in the row's `config` in a patch. Precedence is schema defaults < row config < `settings.yaml`.
+On the `0.1.5` line precedence is schema defaults < row config < `settings.yaml`; the `0.1.6+` lines
+have no `settings.yaml` layer.
 
 ## Sizing the timeout
 

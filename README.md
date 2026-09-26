@@ -28,13 +28,48 @@ dsh plugin --profile web add C:\path\to\dsh-web-search-order
 
 更新就是重跑同一条命令；要锁版本在 spec 后面加 `#v0.1.0`。
 
-装好之后你只会碰到两个名字：包名 `dsh-web-search-order`，和 settings 里的小节名 `web-search-order`。provider id（`auto-fallback`）与 patch 行 id 由包内 patch 代填——只有手工接线时才需要自己写。
+装好之后你只会碰到两个名字：包名 `dsh-web-search-order`，和 provider id `auto-fallback`。patch 行 id 由包内 patch 代填——只有手工接线时才需要自己写。（`0.1.5` 线上还有一个 settings 小节名 `web-search-order`；`0.1.6+` 线改为用行 `config` 配置。）
 
 bundle 是按 profile 的，多个 profile 就各装一次。想让机器上所有 profile 一次性生效，可以改走机器级 patch（`$DSH_HOME/cordis.patch.yml` 里覆盖 `web` 行，再插入一行）——两种方式只能选一种，行 id 只能出现一次。
 
+## 兼容性
+
+| DSH | 状态 | 配置从哪里来 |
+| --- | --- | --- |
+| `0.1.5` 线（alpha / rc） | 支持 | `settings.yaml` 的 `web-search-order:` 小节（热生效）或行 `config` |
+| `0.1.6` 线（alpha） | 支持 | 行 `config`（设置页编辑写回 profile patch） |
+| `0.1.7` 线（alpha / rc） | 支持，已在 `0.1.7-rc.2` 上实测 | 行 `config`（设置页编辑写回 profile patch） |
+
+声明范围（`dsh.engines.dsh` 与 `dsh-web` peer）：
+
+```
+>=0.1.5-alpha.1 <0.2.0 || >=0.1.6-0 <0.2.0 || >=0.1.7-0 <0.2.0
+```
+
+三条子句缺一不可。semver 规定：**带预发布标签的版本，只有当比较器集合里存在同一
+`[major, minor, patch]` 元组的比较器时才能被满足**。只写 0.1.5 和 0.1.7 两条，整条
+`0.1.6-*` 线会被静默排除。
+
+`0.2.0` 起不声明兼容。
+
+> **`0.1.7` 线上 `settings.yaml` 不再生效。** 那条线把 `ctx.settings` 换成了 `SettingsForms`：
+> 插件不再注册 `settings.yaml` 小节，而是由宿主把本插件**行自己的 `Config`** 投影成设置页，
+> 编辑结果写回 profile 的 `cordis.patch.yml`。所以配置请写在**行 `config`** 里（或用设置页）。
+> 这是宿主的行为，不是插件的降级。
+
 ## 配置
 
-写在 `~/.dsh/settings.yaml`，热生效，不用重启：
+**`0.1.7` 线**：写在插件行的 `config` 里（设置页会把它投影成表单并写回 profile patch）：
+
+```yaml
+- id: web-search-order
+  name: 'dsh-web-search-order'
+  config:
+    order: [exa, deepseek-official]
+    timeoutSeconds: 20
+```
+
+**`0.1.5` 线**：行 `config` 之外还可以写在 `~/.dsh/settings.yaml` 的本插件小节里，热生效、不用重启：
 
 ```yaml
 web-search-order:
@@ -51,7 +86,7 @@ web-search-order:
 | `timeoutSeconds` | `20` | 单次尝试的预算，见下节。 |
 | `fallbackOnEmpty` | `true` | 既没有 sources 也没有回答文本时当作未命中，换下一个。设 `false` 则原样返回空结果。 |
 
-同一组键也可以写在 patch 的行 `config` 里。优先级是 schema 默认值 < 行 config < `settings.yaml`。
+`0.1.5` 线的优先级是 schema 默认值 < 行 config < `settings.yaml`；`0.1.6+` 线没有 `settings.yaml` 那一层。
 
 ## 超时怎么设
 
