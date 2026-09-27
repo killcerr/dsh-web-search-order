@@ -67,21 +67,33 @@ test('exports the loader contract', () => {
   assert.equal(SETTINGS_NAMESPACE, 'web-search-order')
 })
 
+test('every Config field is volatile, which is what makes it editable', () => {
+  // DSH 0.1.7's `SettingsForms` builds an entry's form from its volatile subtree
+  // and refuses to write an entry that has none ("has no volatile fields"): an
+  // unmarked field is read-only in the Settings page, and its `settings.yaml`
+  // section cannot be imported either.
+  for (const field of ['order', 'exclude', 'timeoutSeconds', 'fallbackOnEmpty']) {
+    assert.equal(Config.dict[field]?.meta?.volatile, true, `${field} must carry the volatile marker`)
+  }
+})
+
 test('Config applies defaults and enforces bounds', () => {
+  // Volatile fields resolve to live reference cells; `.get()` is how the host and
+  // the router read them.
   const resolved = Config({})
-  assert.deepEqual(resolved.order, [])
-  assert.deepEqual(resolved.exclude, [])
-  assert.equal(resolved.timeoutSeconds, 20)
-  assert.equal(resolved.fallbackOnEmpty, true)
+  assert.deepEqual(resolved.order.get(), [])
+  assert.deepEqual(resolved.exclude.get(), [])
+  assert.equal(resolved.timeoutSeconds.get(), 20)
+  assert.equal(resolved.fallbackOnEmpty.get(), true)
 
   const explicit = Config({ order: ['exa'], timeoutSeconds: 5 })
-  assert.deepEqual(explicit.order, ['exa'])
-  assert.equal(explicit.timeoutSeconds, 5)
+  assert.deepEqual(explicit.order.get(), ['exa'])
+  assert.equal(explicit.timeoutSeconds.get(), 5)
 
   assert.throws(() => Config({ timeoutSeconds: 0 }))
   // No upper bound: a large budget is the user's call, and the caller's own
   // budget still bounds the call.
-  assert.equal(Config({ timeoutSeconds: 301 }).timeoutSeconds, 301)
+  assert.equal(Config({ timeoutSeconds: 301 }).timeoutSeconds.get(), 301)
   assert.throws(() => Config({ order: 'exa' }))
 })
 
